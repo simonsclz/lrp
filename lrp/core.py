@@ -14,6 +14,7 @@ import copy
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+import torch.nn as nn
 
 import pf.sanity_checks
 import pf.utils
@@ -29,10 +30,11 @@ DEVICE: torch.device = torch.device(
 class LRP:
     r"""Compute relevance propagation using Layer-wise Relevance Propagation algorithm."""
 
-    def __init__(self, model: torch.nn.Module) -> None:
+    def __init__(self, model: torch.nn.Module, tabular: bool) -> None:
         r"""Prepare model for LRP computation.
 
-        :param model: Model to be explained
+        :param model: Model to be explained.
+        :param tabular: Flag to indicate if the model works on tabular data or not.
         """
         self.model = copy.deepcopy(model)
         self.model.eval().to(device=DEVICE)
@@ -42,6 +44,7 @@ class LRP:
         self.label_idx_n: Optional[torch.Tensor] = None
         self.relevance_scores_nchw: Optional[torch.Tensor] = None
         self.explained_class_indices: Optional[torch.Tensor] = None
+        self.tabular: bool = tabular
 
     def convert_layers(self, rule_layer_map:
                        List[
@@ -116,8 +119,10 @@ class LRP:
 
         :returns: Relevance for input_nchw
         """
-        pf.sanity_checks.ensure_nchw_format(input_nchw)
-        pf.sanity_checks.verify_square_input(input_nchw)
+
+        if not self.tabular:
+            pf.sanity_checks.ensure_nchw_format(input_nchw)
+            pf.sanity_checks.verify_square_input(input_nchw)
 
         self.input_nchw = input_nchw.to(device=DEVICE)
 
@@ -136,7 +141,10 @@ class LRP:
         low = high = c2_low_grad = c3_high_grad = 0
 
         # Vars to retrieve gradients from first layer
-        first_layer: torch.nn.Module = self.model.features[0]
+        if isinstance(self.model, nn.Sequential):
+            first_layer: torch.nn.Module = self.model[0]
+        else:
+            first_layer: torch.nn.Module = self.model.features[0]
 
         if isinstance(first_layer, rules.LrpZBoxRule):
             # Access high and low copy layers in first layer.

@@ -93,6 +93,8 @@ class _LrpGenericRule(LrpRule):
         :returns: Output of the layer with modified gradient
         """
         output: torch.Tensor = self.layer.forward(X)
+        if isinstance(output, tuple):  # for LSTM / GRU
+            output = output[0]
         z: torch.Tensor = self.epsilon + self.copy_layer.forward(X)
 
         return super().forward_mod_gradient(z, output)

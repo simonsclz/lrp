@@ -37,7 +37,7 @@ class LRP:
         :param tabular: Flag to indicate if the model works on tabular data or not.
         """
         self.model = copy.deepcopy(model)
-        self.model.eval().to(device=DEVICE)
+        self.model.to(device=DEVICE)  # removed eval
         self.rule_layer_map: List[Tuple[List[str], rules.LrpRule,
                                   Dict[str, Union[torch.Tensor, float]]]] = []
         self.input_nchw: Optional[torch.Tensor] = None

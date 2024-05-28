@@ -141,8 +141,10 @@ class LRP:
         low = high = c2_low_grad = c3_high_grad = 0
 
         # Vars to retrieve gradients from first layer
-        if isinstance(self.model, nn.Sequential) or hasattr(self.model, "rnn"):
+        if isinstance(self.model, nn.Sequential):
             first_layer: torch.nn.Module = self.model[0]
+        elif hasattr(self.model, "rnn"):
+            first_layer: torch.nn.Module = self.model.rnn
         else:
             first_layer: torch.nn.Module = self.model.features[0]
 

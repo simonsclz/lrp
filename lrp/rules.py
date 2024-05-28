@@ -94,10 +94,10 @@ class _LrpGenericRule(LrpRule):
         """
         output: torch.Tensor = self.layer.forward(X)
         if isinstance(output, tuple):  # for LSTM / GRU
-            output = output[0]
+            output = output[1]
         to_add = self.copy_layer.forward(X)
         if isinstance(to_add, tuple):
-            to_add = to_add[0]
+            to_add = to_add[1]
         z: torch.Tensor = self.epsilon + to_add
 
         return super().forward_mod_gradient(z, output)
